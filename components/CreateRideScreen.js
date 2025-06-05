@@ -8,7 +8,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+
 import Toast from 'react-native-toast-message';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -18,7 +18,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import tw from "twrnc";
 
 const CreateRideScreen = () => {
-  const navigation=useNavigation()
+  
   const [fromStops, setFromStops] = useState([]);
   const [toStops, setToStops] = useState([]);
 
@@ -30,9 +30,7 @@ const CreateRideScreen = () => {
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   const [availableSeats, setAvailableSeats] = useState('');
-  const [createdRideData, setCreatedRideData] = useState(null);
-  const [showSubroutes, setShowSubroutes] = useState(false);
-
+  
   useEffect(() => {
     fetchFromStops();
   }, []);
@@ -120,8 +118,6 @@ const CreateRideScreen = () => {
       Toast.show({ type: 'success', text1: 'Ride created successfully!' });
       await AsyncStorage.setItem('ride_id', response.data.ride.ride_id);
       console.log(response.data.ride.ride_id);
-      setCreatedRideData(response.data.ride);
-      setShowSubroutes(false);
       setSelectedFrom(null);
       setSelectedTo(null);
       setToStops([]);
@@ -211,68 +207,6 @@ const CreateRideScreen = () => {
       </TouchableOpacity>
       </View>
       <Toast />
-
-      <TouchableOpacity style={styles.primaryButton} onPress={()=>navigation.navigate('RideDetails')} backgroundColor="#1e40af">
-          <Text style={styles.primaryButtonText}>View Active Rides</Text>
-      </TouchableOpacity>
-
-      {/* {createdRideData && (
-        <View style={styles.rideCard}>
-          <Text style={styles.sectionTitle}>Ride Created</Text>
-          <Text style={styles.detailText}>
-            From: <Text style={styles.bold}>{createdRideData.originStopName}</Text>
-          </Text>
-          <Text style={styles.detailText}>
-            To: <Text style={styles.bold}>{createdRideData.destinationStopName}</Text>
-          </Text>
-          <Text style={styles.detailText}>
-            Departure: {new Date(createdRideData.departure_time).toLocaleString()}
-          </Text>
-          <Text style={styles.detailText}>
-            Available Seats: {createdRideData.available_seats}
-          </Text>
-
-          <TouchableOpacity
-            style={styles.toggleButton}
-            onPress={() => setShowSubroutes(!showSubroutes)}
-          >
-            <Text style={styles.subrouteHeader}>Subroute Details</Text>
-            <Ionicons
-              name={showSubroutes ? 'chevron-up-outline' : 'chevron-down-outline'}
-              size={24}
-              color="#000"
-            />
-          </TouchableOpacity>
-
-          {showSubroutes && (
-            <View>
-              <View style={styles.tableHeader}>
-                <Text style={styles.tableCell}>From</Text>
-                <Text style={styles.tableCell}>To</Text>
-                <Text style={styles.tableCell}>Dist</Text>
-                <Text style={styles.tableCell}>Time</Text>
-                <Text style={styles.tableCell}>Cost</Text>
-              </View>
-
-              {createdRideData.subroutes.map((sr, index) => (
-                <View key={index} style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{sr.from_stop_name}</Text>
-                  <Text style={styles.tableCell}>{sr.to_stop_name}</Text>
-                  <Text style={styles.tableCell}>{sr.distance} m</Text>
-                  <Text style={styles.tableCell}>{sr.time} min</Text>
-                  <Text style={styles.tableCell}>₹{sr.cost}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-          <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: '#d9534f', margin: 15 }]}
-            onPress={() => setCreatedRideData(null)}
-          >
-            <Text style={styles.primaryButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      )} */}
     </ScrollView>
   );
 };

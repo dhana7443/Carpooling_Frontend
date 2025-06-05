@@ -11,10 +11,25 @@ import api from "../utils/api";
 import { useRoute } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import tw from "twrnc";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const handleRideBooking = async (rideId) => {
+const handleRideBooking = async (rideId, fromStop, toStop) => {
   try {
-    const response = await api.post('/ride-requests/', { ride_id: rideId });
+    const token = await AsyncStorage.getItem('userToken');
+
+    const response = await api.post(
+      '/ride-requests/',
+      {
+        ride_id: rideId,
+        from_stop: fromStop,
+        to_stop: toStop,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
     Toast.show({
       type: 'success',
@@ -29,6 +44,7 @@ const handleRideBooking = async (rideId) => {
     });
   }
 };
+
 
 const RideResultsScreen = () => {
   const route = useRoute();
@@ -117,7 +133,7 @@ const RideResultsScreen = () => {
             )}
             <TouchableOpacity
               style={tw`bg-blue-600 py-2 px-4 mt-4 rounded-xl`}
-              onPress={() => handleRideBooking(ride.ride_id)}
+              onPress={() => handleRideBooking(ride.ride_id,from,to)}
             >
               <Text style={tw`text-white text-center font-semibold`}>Book Ride</Text>
             </TouchableOpacity>

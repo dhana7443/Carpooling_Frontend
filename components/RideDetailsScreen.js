@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView,ScrollView, ActivityIndicator ,TouchableOpacity} from 'react-native';
+import { View,Alert, Text, StyleSheet, SafeAreaView,ScrollView, ActivityIndicator ,TouchableOpacity} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from "../src/api/axios";
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Toast from 'react-native-toast-message';
 
 const RideDetailsScreen = () => {
   const [rideDetails, setRideDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showSubroutes, setShowSubroutes] = useState(false);
   
-
   const fetchRideDetails = async () => {
     try {
       const ride_id = await AsyncStorage.getItem('ride_id');
@@ -37,6 +37,48 @@ const RideDetailsScreen = () => {
     fetchRideDetails();
   }, []);
 
+  const handleCancelRide = async () => {
+    Alert.alert(
+      "Confirm Cancellation",
+      "Are you sure you want to cancel this ride?",
+      [
+        { text: "No" },
+        {
+          text: "Yes",
+          onPress: async () => {
+            try {
+              const ride_id = await AsyncStorage.getItem('ride_id');
+              const token = await AsyncStorage.getItem('userToken');
+              console.log(ride_id);
+              console.log(token);
+              await api.put(`/rides/cancel/${ride_id}`, {
+                headers: {
+                  Authorization: `Bearer ${token}`
+                }
+              });
+
+              await AsyncStorage.removeItem('ride_id');
+              Toast.show({
+                type: 'success',
+                text1: 'Ride cancelled successfully',
+              });
+
+              setRideDetails(null)
+
+              navigation.navigate('DriverDashboard'); // or appropriate screen
+            } catch (error) {
+              console.error('Cancel Ride Error:', error.message);
+              Toast.show({
+                type: 'error',
+                text1: 'Failed to cancel ride'
+              });
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -48,48 +90,16 @@ const RideDetailsScreen = () => {
   if (!rideDetails) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>Failed to load ride details.</Text>
+        <Text >No active rides at this point or failed to load details</Text>
       </View>
     );
   }
 
   return (
-
-    // <SafeAreaView style={styles.container}>
-    //     <ScrollView style={styles.content}>
-    //   <Text style={styles.heading}>Ride Details</Text>
-
-    //   <Text style={styles.label}>From:</Text>
-    //   <Text style={styles.value}>{rideDetails.originStopName}</Text>
-
-    //   <Text style={styles.label}>To:</Text>
-    //   <Text style={styles.value}>{rideDetails.destinationStopName}</Text>
-
-    //   <Text style={styles.label}>Departure Time:</Text>
-    //   <Text style={styles.value}>{new Date(rideDetails.departure_time).toLocaleString()}</Text>
-
-    //   <Text style={styles.label}>Available Seats:</Text>
-    //   <Text style={styles.value}>{rideDetails.available_seats}</Text>
-
-    //   <Text style={styles.label}>Route ID:</Text>
-    //   <Text style={styles.value}>{rideDetails.route_id}</Text>
-
-    //   <Text style={styles.subheading}>Subroutes:</Text>
-    //   {rideDetails.subroutes.map((sr, idx) => (
-    //     <View key={idx} style={styles.subrouteBox}>
-    //       <Text style={styles.subrouteText}>
-    //         {sr.from_stop_name} ➜ {sr.to_stop_name}
-    //       </Text>
-    //       <Text style={styles.subrouteInfo}>Distance: {sr.distance} km</Text>
-    //       <Text style={styles.subrouteInfo}>Time: {sr.time} mins</Text>
-    //       <Text style={styles.subrouteInfo}>Cost: ₹{sr.cost}</Text>
-    //     </View>
-    //   ))}
-    // </ScrollView>
-    // </SafeAreaView>
-    <ScrollView>
-      <View style={styles.container}>
-      <View style={styles.rideCard}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.content}>
+        <Text style={styles.heading}>Ride Details</Text>
+        <View style={styles.rideCard}>
           <Text style={styles.sectionTitle}>Ride Created</Text>
           <Text style={styles.detailText}>
             From: <Text style={styles.bold}>{rideDetails.originStopName}</Text>
@@ -139,23 +149,21 @@ const RideDetailsScreen = () => {
           )}
           <TouchableOpacity
             style={[styles.primaryButton, { backgroundColor: '#d9534f', margin: 15 }]}
-            onPress={() => setCreatedRideData(null)}
+            onPress={handleCancelRide}
           >
             <Text style={styles.primaryButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
-    </View>
     </ScrollView>
-    
-    
-    
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex:1,
     marginTop:20,
-    padding: 20,
+    padding: 10,
     backgroundColor: '#F9FAFB',
   },
 
@@ -163,11 +171,14 @@ const styles = StyleSheet.create({
     padding:20
   },
   centered: {
+    
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'start',
+    marginTop:90,
     alignItems: 'center'
   },
   heading: {
+    marginTop:10,
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
@@ -222,7 +233,7 @@ const styles = StyleSheet.create({
     fontSize: 16
   },
   rideCard: {
-    marginTop: 20,
+    marginTop: 5,
     backgroundColor: '#f3f4f6',
     padding: 16,
     borderRadius: 10,
